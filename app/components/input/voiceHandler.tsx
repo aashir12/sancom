@@ -67,7 +67,9 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognitionCtor) {
-      setError("Web Speech API is not supported in this browser.");
+      setTimeout(() => {
+        setError("Web Speech API is not supported in this browser.");
+      }, 0);
       return;
     }
 
