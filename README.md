@@ -1,36 +1,363 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Voice Calling Agent
 
-## Getting Started
+A scalable AI Voice Calling Agent built with **Next.js**, **Faster-Whisper**, **Ollama (Qwen)**, and **Piper TTS**.
 
-First, run the development server:
+The goal of this project is to create a low-cost outbound AI calling system that can be integrated with **VICIdial/Asterisk** while keeping infrastructure costs minimal using open-source models.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+# Architecture
+
+```
+Caller
+   │
+   ▼
+Speech (Audio)
+   │
+   ▼
+Faster Whisper
+(Speech → Text)
+   │
+   ▼
+Qwen (Ollama)
+(Text → Text)
+   │
+   ▼
+Piper
+(Text → Speech)
+   │
+   ▼
+Caller hears AI Response
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js 15
+- TypeScript
+- Faster-Whisper
+- Ollama
+- Qwen 2.5
+- Piper TTS
+- Node.js
+- REST API
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+# Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+voice-agent/
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+├── app/
+│   ├── api/
+│   │   ├── stt/
+│   │   │   └── route.ts
+│   │   │
+│   │   ├── llm/
+│   │   │   └── route.ts
+│   │   │
+│   │   ├── tts/
+│   │   │   └── route.ts
+│   │   │
+│   │   └── call/
+│   │       └── route.ts
+│   │
+│   └── page.tsx
+│
+├── lib/
+│   ├── whisper/
+│   │   ├── transcribe.ts
+│   │   └── index.ts
+│   │
+│   ├── ollama/
+│   │   ├── generate.ts
+│   │   └── index.ts
+│   │
+│   ├── piper/
+│   │   ├── speak.ts
+│   │   └── index.ts
+│   │
+│   └── pipeline/
+│       └── voicePipeline.ts
+│
+├── services/
+│   ├── stt.service.ts
+│   ├── llm.service.ts
+│   ├── tts.service.ts
+│   └── call.service.ts
+│
+├── temp/
+│   ├── audio/
+│   └── output/
+│
+├── utils/
+├── types/
+├── public/
+└── package.json
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Pipeline
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Step 1
+
+Receive caller audio.
+
+```
+Audio
+```
+
+↓
+
+## Step 2
+
+Convert speech into text.
+
+```
+Faster Whisper
+```
+
+↓
+
+Example:
+
+```
+Hello, I want to rent an apartment.
+```
+
+↓
+
+## Step 3
+
+Send transcript to the LLM.
+
+```
+Ollama
+      │
+      ▼
+Qwen 2.5
+```
+
+↓
+
+Example response
+
+```
+Sure!
+
+Can I know which city you're interested in?
+```
+
+↓
+
+## Step 4
+
+Convert text into speech.
+
+```
+Piper TTS
+```
+
+↓
+
+Return audio back to the caller.
+
+---
+
+# Module Responsibilities
+
+## Faster Whisper
+
+Responsible only for converting audio into text.
+
+Input
+
+```
+Audio
+```
+
+Output
+
+```
+Text
+```
+
+---
+
+## Ollama + Qwen
+
+Responsible only for reasoning and generating responses.
+
+Input
+
+```
+Text
+```
+
+Output
+
+```
+Text
+```
+
+---
+
+## Piper
+
+Responsible only for converting text into speech.
+
+Input
+
+```
+Text
+```
+
+Output
+
+```
+Audio
+```
+
+---
+
+# Voice Pipeline
+
+```ts
+Audio
+   │
+   ▼
+Speech To Text
+   │
+   ▼
+LLM
+   │
+   ▼
+Text To Speech
+   │
+   ▼
+Return Audio
+```
+
+---
+
+# Development Roadmap
+
+## Phase 1
+
+Implement Faster Whisper.
+
+Goal:
+
+```
+Audio
+ ↓
+Text
+```
+
+---
+
+## Phase 2
+
+Integrate Ollama.
+
+Goal:
+
+```
+Audio
+ ↓
+Whisper
+ ↓
+Qwen
+```
+
+---
+
+## Phase 3
+
+Integrate Piper.
+
+Goal:
+
+```
+Audio
+ ↓
+Whisper
+ ↓
+Qwen
+ ↓
+Piper
+```
+
+---
+
+## Phase 4
+
+Create complete pipeline.
+
+```
+voicePipeline()
+
+↓
+
+Whisper
+
+↓
+
+Qwen
+
+↓
+
+Piper
+
+↓
+
+Return Audio
+```
+
+---
+
+## Phase 5
+
+Integrate with VICIdial / Asterisk.
+
+```
+Phone Call
+
+↓
+
+Voice Pipeline
+
+↓
+
+AI Response
+
+↓
+
+Caller
+```
+
+---
+
+# Future Improvements
+
+- Streaming responses
+- Interrupt handling (barge-in)
+- Voice Activity Detection (VAD)
+- Conversation memory
+- RAG support
+- CRM integration
+- Call recording
+- Analytics dashboard
+- Multi-language support
+- GPU deployment
+- Docker support
+- Kubernetes deployment
+
+---
+
+# Goal
+
+Build a production-ready AI Voice Calling Agent capable of handling outbound calls using open-source AI models while minimizing infrastructure costs.
