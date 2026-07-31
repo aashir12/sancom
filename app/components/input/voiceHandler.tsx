@@ -5,25 +5,75 @@ interface VoiceInputProps {
   onTranscript: (text: string) => void;
 }
 
+// --- Minimal Web Speech API types (not in default TS DOM lib) ---
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+// --- End Web Speech API types ---
+
 export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    // Ensure this runs only in the browser
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+    const SpeechRecognitionCtor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionCtor) {
       setError("Web Speech API is not supported in this browser.");
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false; // Stops automatically when user finishes speaking
-    recognition.interimResults = false; // Only deliver final results
+    const recognition = new SpeechRecognitionCtor();
+    recognition.continuous = false;
+    recognition.interimResults = false;
     recognition.lang = "en-US";
 
     recognition.onstart = () => {
@@ -31,12 +81,12 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
       setError(null);
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       onTranscript(transcript);
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       setError(`Error occurred: ${event.error}`);
       setIsListening(false);
     };
@@ -46,11 +96,15 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
     };
 
     recognitionRef.current = recognition;
+
+    // Cleanup: stop recognition if component unmounts while listening
+    return () => {
+      recognition.abort();
+    };
   }, [onTranscript]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) return;
-
     if (isListening) {
       recognitionRef.current.stop();
     } else {
