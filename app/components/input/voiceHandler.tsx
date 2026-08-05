@@ -69,7 +69,7 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
     if (!SpeechRecognitionCtor) {
       setTimeout(() => {
         setError("Web Speech API is not supported in this browser.");
-      }, 0);
+      }, 200);
       return;
     }
 
@@ -126,7 +126,13 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
       >
         {isListening ? "🛑 Stop Listening" : "🎙️ Start Voice Input"}
       </button>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && (
+        <p className="text-xs text-red-500">
+          {error.toLowerCase() == "error occurred: aborted"
+            ? "Voice input was aborted."
+            : error}
+        </p>
+      )}
     </div>
   );
 }
