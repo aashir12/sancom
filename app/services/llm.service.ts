@@ -56,7 +56,7 @@ export async function getQwenReply(message: string): Promise<string> {
     payload.prompt = message;
   }
 
-  const response = await fetch(`${OLLAMA_API_URL}/v1/generate`, {
+  const response = await fetch(`${OLLAMA_API_URL}/v1/chat`, {
     method: "POST",
     headers: buildHeaders(),
     body: JSON.stringify(payload),
