@@ -45,8 +45,13 @@ function parseOlamaResponse(data: any): string {
 export async function getQwenReply(message: string): Promise<string> {
   const payload: Record<string, unknown> = {
     model: OLLAMA_MODEL,
-    max_tokens: 512,
-    temperature: 0.2,
+    messages: [
+      {
+        role: "user",
+        content: message,
+      },
+    ],
+    stream: false,
   };
 
   if (OLLAMA_MODEL.toLowerCase().startsWith("qwen")) {
