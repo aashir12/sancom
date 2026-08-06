@@ -1,5 +1,4 @@
-const OLLAMA_API_URL =
-  process.env.OLLAMA_API_URL ?? "http://127.0.0.1:11434";
+const OLLAMA_API_URL = process.env.OLLAMA_API_URL ?? "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "qwen";
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 

@@ -47,7 +47,9 @@ export default function VoiceWrapper() {
       speakText(replyText);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to fetch response from Olama."
+        err instanceof Error
+          ? err.message
+          : "Unable to fetch response from Olama.",
       );
     } finally {
       setLoading(false);

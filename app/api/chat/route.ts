@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     if (!userMessage) {
       return NextResponse.json(
         { error: "Missing message in request body." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     console.error("[chat route]", error);
     return NextResponse.json(
       { error: "Unable to fetch response from Olama Qwen." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
