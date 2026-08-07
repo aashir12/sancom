@@ -2,6 +2,8 @@ const OLLAMA_API_URL = process.env.OLLAMA_API_URL ?? "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:1.5b";
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 
+type OlamaData = string | Record<string, unknown> | { output_text?: string; output?: Array<{ content?: Array<{ text?: string }> }>; choices?: Array<{ message?: { content?: string }; delta?: { content?: string } }> };
+
 function buildHeaders() {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -14,7 +16,7 @@ function buildHeaders() {
   return headers;
 }
 
-function parseOlamaResponse(data: any): string {
+function parseOlamaResponse(data: OlamaData): string {
   if (!data) {
     return "";
   }
