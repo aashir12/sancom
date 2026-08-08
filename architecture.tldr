@@ -128,7 +128,7 @@
 		},
 		{
 			"x": 186.71193415637856,
-			"y": 114.41328821673517,
+			"y": -22.760923031550135,
 			"z": 0.7290000000000001,
 			"meta": {},
 			"id": "camera:page:page",
@@ -182,9 +182,9 @@
 			"editingShapeId": null,
 			"croppingShapeId": null,
 			"selectedShapeIds": [
-				"shape:8-QsAtlUwLFMsZiUl-Cch"
+				"shape:SzsTR0jmOrT-z52Cr8e6V"
 			],
-			"hoveredShapeId": "shape:8-QsAtlUwLFMsZiUl-Cch",
+			"hoveredShapeId": null,
 			"erasingShapeIds": [],
 			"hintingShapeIds": [],
 			"focusedGroupId": null,
@@ -243,6 +243,18 @@
 								{
 									"type": "text",
 									"text": "Training Model"
+								}
+							]
+						},
+						{
+							"type": "paragraph",
+							"attrs": {
+								"dir": "auto"
+							},
+							"content": [
+								{
+									"type": "text",
+									"text": "   (PineCone)"
 								}
 							]
 						}
@@ -402,6 +414,45 @@
 			"typeName": "shape"
 		},
 		{
+			"x": 525.6795254093793,
+			"y": 304.42531741544497,
+			"rotation": 0,
+			"isLocked": false,
+			"opacity": 1,
+			"meta": {},
+			"id": "shape:-jweMgRhwKfPOd6iXHPBp",
+			"type": "geo",
+			"props": {
+				"w": 185.64240464784802,
+				"h": 2.743484224965755,
+				"geo": "rectangle",
+				"dash": "draw",
+				"growY": 0,
+				"url": "",
+				"scale": 1,
+				"flipX": false,
+				"flipY": false,
+				"color": "black",
+				"labelColor": "black",
+				"fill": "none",
+				"size": "m",
+				"font": "draw",
+				"align": "middle",
+				"verticalAlign": "middle",
+				"richText": {
+					"type": "doc",
+					"content": [
+						{
+							"type": "paragraph"
+						}
+					]
+				}
+			},
+			"parentId": "page:page",
+			"index": "a7fff",
+			"typeName": "shape"
+		},
+		{
 			"x": 53.80019685303071,
 			"y": 312.2021737214399,
 			"rotation": 0,
@@ -444,6 +495,48 @@
 			"typeName": "shape"
 		},
 		{
+			"x": 585.1215719843107,
+			"y": 312.2021737214399,
+			"rotation": 0,
+			"isLocked": false,
+			"opacity": 1,
+			"meta": {},
+			"id": "shape:SzsTR0jmOrT-z52Cr8e6V",
+			"type": "text",
+			"props": {
+				"color": "black",
+				"size": "m",
+				"w": 187.54963924789956,
+				"font": "draw",
+				"textAlign": "start",
+				"autoSize": false,
+				"scale": 1,
+				"richText": {
+					"type": "doc",
+					"attrs": {
+						"dir": "auto"
+					},
+					"content": [
+						{
+							"type": "paragraph",
+							"attrs": {
+								"dir": "auto"
+							},
+							"content": [
+								{
+									"type": "text",
+									"text": "RAG"
+								}
+							]
+						}
+					]
+				}
+			},
+			"parentId": "page:page",
+			"index": "a8Dor",
+			"typeName": "shape"
+		},
+		{
 			"meta": {},
 			"id": "page:page",
 			"name": "Page 1",
@@ -467,7 +560,7 @@
 			"brush": null,
 			"scribbles": [],
 			"cursor": {
-				"type": "default",
+				"type": "move",
 				"rotation": 0
 			},
 			"isFocusMode": false,
