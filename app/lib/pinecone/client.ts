@@ -1,10 +1,9 @@
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone, type Index } from "@pinecone-database/pinecone";
 
 const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME;
-const PINECONE_ENVIRONMENT = process.env.PINECONE_ENVIRONMENT ?? process.env.PINECONE_ENV;
 
-let _index: ReturnType<PineconeClient["Index"]> | null = null;
+let _index: Index | null = null;
 
 export async function pineconeIndex() {
   if (_index) return _index;
@@ -15,12 +14,8 @@ export async function pineconeIndex() {
     );
   }
 
-  const client = new PineconeClient();
-  // Initialize with environment when provided. If not provided, Pinecone SDK may still work
-  // depending on environment configuration. Keep init minimal and let errors surface.
-  await client.init({ apiKey: PINECONE_API_KEY, environment: PINECONE_ENVIRONMENT });
-
-  _index = client.Index(PINECONE_INDEX_NAME);
+  const pc = new Pinecone({ apiKey: PINECONE_API_KEY });
+  _index = pc.index({ name: PINECONE_INDEX_NAME });
   return _index;
 }
 

@@ -1,50 +1,36 @@
 import pineconeIndex from "./client";
-import { OllamaEmbeddings } from "@langchain/ollama";
 
-const EMBEDDING_MODEL = "nomic-embed-text";
 const TOP_K = 3;
+// Field that Pinecone embeds (see index CONFIGURATION tab → field_map). Default for console indexes is usually "text".
+const TEXT_FIELD = process.env.PINECONE_TEXT_FIELD ?? "text";
 
 export async function getRelevantContext(query: string): Promise<string> {
   try {
     if (!query) return "";
 
-    // Generate embedding using Ollama via LangChain bindings
-    const embedder = new OllamaEmbeddings({ model: EMBEDDING_MODEL });
-    const vector = await embedder.embedQuery(query);
-
-    if (!vector || !Array.isArray(vector) || vector.length === 0) {
-      console.error("[rag] Empty embedding generated for query.");
-      return "";
-    }
-
     const index = await pineconeIndex();
 
-    // Query Pinecone for nearest neighbors
-    // The official client supports a `query` method. Use a compact request.
-    // Type differences across SDK versions may exist; keep call simple.
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const result = await index.query({
-      topK: TOP_K,
-      vector,
-      includeMetadata: true,
+    const result = await index.searchRecords({
+      query: {
+        topK: TOP_K,
+        inputs: { text: query },
+      },
+      fields: [TEXT_FIELD, "category"],
     });
 
-    const matches = result?.matches ?? result?.matches ?? [];
-    if (!Array.isArray(matches) || matches.length === 0) return "";
+    const hits = result.result?.hits ?? [];
+    if (!Array.isArray(hits) || hits.length === 0) return "";
 
     const texts: string[] = [];
-    for (const m of matches.slice(0, TOP_K)) {
-      const meta = m.metadata ?? m?.metadata ?? {};
-      const t = typeof meta.text === "string" ? meta.text : undefined;
-      if (t) texts.push(t.trim());
+    for (const hit of hits.slice(0, TOP_K)) {
+      const fields = (hit.fields ?? {}) as Record<string, unknown>;
+      const value = fields[TEXT_FIELD];
+      if (typeof value === "string" && value.trim()) {
+        texts.push(value.trim());
+      }
     }
 
-    if (texts.length === 0) return "";
-
-    // Join into a concise context string
-    const context = texts.join("\n\n");
-    return context;
+    return texts.join("\n\n");
   } catch (err) {
     console.error("[rag] failed to retrieve context:", err);
     return "";
