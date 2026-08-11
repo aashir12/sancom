@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:pinecone": "node --env-file=.env scripts/seed-pinecone.mjs"
   },
   "dependencies": {
+    "@langchain/ollama": "^1.3.0",
+    "@pinecone-database/pinecone": "^8.2.0",
     "next": "16.2.12",
     "react": "19.2.4",
     "react-dom": "19.2.4"

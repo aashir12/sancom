@@ -1,3 +1,5 @@
+import { getRelevantContext } from "../lib/pinecone/rag";
+
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL ?? "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:1.5b";
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
@@ -45,21 +47,30 @@ function parseOlamaResponse(data: OlamaData): string {
 }
 
 export async function getQwenReply(message: string): Promise<string> {
+  // Attempt to retrieve relevant company context from Pinecone RAG
+  let context = "";
+  try {
+    context = await getRelevantContext(message);
+  } catch (err) {
+    console.error("[llm.service] RAG context retrieval failed:", err);
+    context = "";
+  }
+
+  const systemPrompt = `You are a professional AI voice calling agent for Sancom Digital, a website creation agency.\n\nAnswer naturally and concisely in 1–2 short sentences because your response will be converted to speech.\n\nUse the company context below when it is relevant.\n\nIMPORTANT:\n- Do not invent company information.\n- Do not invent prices.\n- Do not invent features.\n- Do not invent discounts.\n- Do not make unsupported promises.\n- If the information is not available, say that it needs to be confirmed with the team.\n- Do not mention RAG, Pinecone, embeddings, vector databases, or internal implementation details to the customer.\n- Speak like a professional human sales representative.\n\n[COMPANY CONTEXT]\n${context || 'No specific company information was retrieved.'}\n\n[USER MESSAGE]`;
+
   const payload: Record<string, unknown> = {
     model: OLLAMA_MODEL,
-    messages: [
-      {
-        role: "user",
-        content: message,
-      },
-    ],
     stream: false,
   };
 
   if (OLLAMA_MODEL.toLowerCase().startsWith("qwen")) {
-    payload.messages = [{ role: "user", content: message }];
+    payload.messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: message },
+    ];
   } else {
-    payload.prompt = message;
+    // Non-Qwen models: concatenate system prompt + user message into prompt
+    payload.prompt = `${systemPrompt}\n${message}`;
   }
 
   const response = await fetch(`${OLLAMA_API_URL}/api/chat`, {
