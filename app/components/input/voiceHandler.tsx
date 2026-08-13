@@ -60,58 +60,95 @@ declare global {
 export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
 
   useEffect(() => {
-    const SpeechRecognitionCtor =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognitionCtor) {
+    // Initialize MediaRecorder-based capture for sending audio to the server
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setTimeout(() => {
-        setError("Web Speech API is not supported in this browser.");
+        setError("Media capture is not supported in this browser.");
       }, 200);
       return;
     }
 
-    const recognition = new SpeechRecognitionCtor();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      setError(null);
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
-      onTranscript(transcript);
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      setError(`Error occurred: ${event.error}`);
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-
-    // Cleanup: stop recognition if component unmounts while listening
+    // Cleanup on unmount
     return () => {
-      recognition.abort();
+      try {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+          mediaRecorderRef.current.stop();
+        }
+      } catch (e) {
+        // ignore
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        mediaStreamRef.current = null;
+      }
     };
   }, [onTranscript]);
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) return;
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      recognitionRef.current.start();
+  const startRecording = async () => {
+    setError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
+      const options: MediaRecorderOptions = { mimeType: "audio/webm;codecs=opus" };
+      const recorder = new MediaRecorder(stream, options);
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstart = () => {
+        setIsListening(true);
+      };
+
+      recorder.onstop = async () => {
+        setIsListening(false);
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        // send to server
+        try {
+          const form = new FormData();
+          form.append("file", blob, "recording.webm");
+
+          const res = await fetch("/api/stt", { method: "POST", body: form });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data?.error || "Transcription failed");
+          const text = String(data.text ?? "").trim();
+          if (text) onTranscript(text);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
+  };
+
+  const stopRecording = () => {
+    try {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        mediaStreamRef.current = null;
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const toggleListening = () => {
+    if (isListening) stopRecording();
+    else startRecording();
   };
 
   return (

@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+venv/
+.venv/
+**/venv/
+**/.venv/
+whisper_server/venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+pip-wheel-metadata/
+*.egg-info/
+
