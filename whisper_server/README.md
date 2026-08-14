@@ -3,6 +3,7 @@
 This minimal FastAPI server accepts audio uploads at `/v1/audio/transcriptions` and returns a JSON `{ "text": "..." }` transcription using `faster-whisper`.
 
 Prereqs:
+
 - Python 3.9+
 - `ffmpeg` on PATH (recommended to support webm/other containers)
 - Install Python deps:
@@ -21,6 +22,7 @@ python server.py
 ```
 
 Set environment variables to configure:
+
 - `WHISPER_MODEL` (default: `small`)
 - `WHISPER_DEVICE` (`cpu` or `cuda`, default: `cpu`)
 

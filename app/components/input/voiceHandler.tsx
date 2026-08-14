@@ -76,7 +76,10 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
     // Cleanup on unmount
     return () => {
       try {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        if (
+          mediaRecorderRef.current &&
+          mediaRecorderRef.current.state !== "inactive"
+        ) {
           mediaRecorderRef.current.stop();
         }
       } catch (e) {
@@ -95,7 +98,9 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
-      const options: MediaRecorderOptions = { mimeType: "audio/webm;codecs=opus" };
+      const options: MediaRecorderOptions = {
+        mimeType: "audio/webm;codecs=opus",
+      };
       const recorder = new MediaRecorder(stream, options);
       chunksRef.current = [];
 
@@ -114,8 +119,8 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
         try {
           const form = new FormData();
           form.append("file", blob, "recording.webm");
-
           const res = await fetch("/api/stt", { method: "POST", body: form });
+          console.log("response received from stt:", res);
           const data = await res.json();
           if (!res.ok) throw new Error(data?.error || "Transcription failed");
           const text = String(data.text ?? "").trim();
@@ -134,7 +139,10 @@ export default function VoiceHandler({ onTranscript }: VoiceInputProps) {
 
   const stopRecording = () => {
     try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
         mediaRecorderRef.current.stop();
       }
       if (mediaStreamRef.current) {

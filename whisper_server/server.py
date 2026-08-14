@@ -3,15 +3,27 @@ import tempfile
 import os
 import subprocess
 from faster_whisper import WhisperModel
+import asyncio
 import uvicorn
 
 app = FastAPI()
 
 # Model selection: set WHISPER_MODEL (e.g. "small") and WHISPER_DEVICE ("cpu" or "cuda")
-MODEL_NAME = os.environ.get("WHISPER_MODEL", "small")
+MODEL_NAME = os.environ.get("WHISPER_MODEL", "base")
 DEVICE = os.environ.get("WHISPER_DEVICE", "cpu")
 
-model = WhisperModel(MODEL_NAME, device=DEVICE)
+_model = None
+
+
+async def get_model():
+    global _model
+    if _model is None:
+        # Load model in thread to avoid blocking the event loop
+        def load():
+            return WhisperModel(MODEL_NAME, device=DEVICE)
+
+        _model = await asyncio.to_thread(load)
+    return _model
 
 
 def to_wav(input_path: str) -> str:
@@ -53,7 +65,9 @@ async def transcribe(file: UploadFile = File(...)):
                 # Fallback: if ffmpeg not available or conversion fails, proceed with original file
                 wav_path = tmp_path
 
-        segments, _ = model.transcribe(wav_path)
+        # ensure model is loaded (lazy); run transcription in thread
+        model = await get_model()
+        segments, _ = await asyncio.to_thread(model.transcribe, wav_path)
         text = "".join([s.text for s in segments])
         return {"text": text}
     finally:
